@@ -1,13 +1,25 @@
-# Download ISO Image into Proxmox
-resource "proxmox_virtual_environment_download_file" "this" {
-  content_type = "iso"
-  datastore_id = var.proxmox_iso_storage
-  file_name    = var.proxmox_iso_name
-  node_name    = var.proxmox_node
-  url          = var.proxmox_iso_url
+# Downloads a file (boot image or disk image) from a URL straight into a Proxmox datastore.
+# Proxmox downloads it from its own network: nothing goes through the machine that runs Terraform.
 
-  # Optional Configuration
-  checksum           = var.proxmox_iso_checksum
-  checksum_algorithm = var.proxmox_iso_checksum != null ? var.proxmox_iso_checksum_algorithm : null
-  overwrite          = var.proxmox_upload_overwrite
+# Existing states created with the deprecated resource name move to the short name without a re-download.
+moved {
+  from = proxmox_virtual_environment_download_file.this
+  to   = proxmox_download_file.this
+}
+
+resource "proxmox_download_file" "this" {
+  node_name    = var.node_name
+  datastore_id = var.datastore_id
+  content_type = var.content_type
+  url          = var.url
+  file_name    = var.file_name
+
+  checksum                = var.checksum
+  checksum_algorithm      = var.checksum != null ? var.checksum_algorithm : null
+  decompression_algorithm = var.decompression_algorithm
+
+  overwrite           = var.overwrite
+  overwrite_unmanaged = var.overwrite_unmanaged
+  upload_timeout      = var.upload_timeout
+  verify              = var.verify_tls
 }
